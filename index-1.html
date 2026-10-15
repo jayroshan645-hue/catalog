@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kanha Catalog</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1b2a41;--mute:#6b7585;--acc:#e89a00;--line:#e4e0d6;--ok:#1f7a4d}
+@media (prefers-color-scheme:dark){:root{--bg:#121821;--card:#1c2533;--ink:#eef1f6;--mute:#9aa6b8;--line:#2b3649;--ok:#4cc38a}}
+*{box-sizing:border-box}html{color-scheme:light dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,"Noto Sans",sans-serif;font-size:16px}
+header{position:sticky;top:0;background:var(--bg);padding:12px 14px 8px;z-index:5;border-bottom:1px solid var(--line)}
+h1{margin:0 0 8px;font-size:22px;font-weight:800}
+input,select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit}
+input:focus,button:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+button{font:inherit;border:0;border-radius:10px;padding:11px 14px;font-weight:700;background:var(--acc);color:#1b2a41;cursor:pointer}
+button.alt{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+button.wa{background:#25d366;color:#06331a}
+button.del{background:transparent;color:#d33;border:1.5px solid #d33}
+.row{display:flex;gap:8px;align-items:center}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px}
+.chip{flex:none;padding:7px 13px;border-radius:99px;border:1.5px solid var(--line);background:transparent;color:var(--ink)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{padding:10px 14px 120px;max-width:640px;margin:0 auto}
+h2{font-size:15px;margin:18px 2px 8px;color:var(--mute)}
+.item{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px;margin-bottom:8px;align-items:center}
+.item.ed{cursor:pointer}
+.ph{flex:none;width:64px;height:64px;border-radius:10px;background:#f3d9a0 center/cover no-repeat;display:grid;place-items:center;font-size:26px;font-weight:800;color:#8a5a00}
+.info{flex:1;min-width:0}.nm{font-weight:700;line-height:1.25}.pk{color:var(--mute);font-size:13px}
+.pr{text-align:right;flex:none}.rate{font-size:20px;font-weight:800;color:var(--ok)}.mrp{font-size:12px;color:var(--mute)}
+.qty{display:flex;align-items:center;gap:6px;margin-top:6px;justify-content:flex-end}
+.qty button{width:34px;height:34px;padding:0;font-size:20px;line-height:1}
+.qty b{min-width:26px;text-align:center}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;z-index:6}
+.bar button{flex:1}
+dialog{border:0;border-radius:18px;padding:16px;width:min(94vw,460px);background:var(--card);color:var(--ink);max-height:92vh;overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 4px;font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pick{position:relative;flex:1;display:block;text-align:center;padding:11px 6px;border:1.5px solid var(--line);border-radius:10px;font-weight:700;overflow:hidden}
+.pick input{position:absolute;inset:0;width:100%;height:100%;opacity:0;padding:0;border:0;font-size:0}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:99px;font-weight:600;z-index:20}
+.sum{font-size:14px;line-height:1.5;margin:6px 0}.sum div{display:flex;justify-content:space-between;gap:10px}
+.link{background:none;color:var(--mute);font-weight:500;text-decoration:underline;padding:8px;display:block;margin:24px auto 0}
+</style></head>
+<body>
+<header><h1>Kanha Catalog</h1>
+<input id="q" type="search" placeholder="Search items…" aria-label="Search">
+<div class="chips" id="chips"></div></header>
+<main id="list"></main>
+<div class="bar" id="bar"></div>
+
+<dialog id="ed"><h3 id="edT" style="margin:0 0 4px">Item</h3>
+ <div class="row" style="margin:8px 0"><div class="ph" id="edPh"></div>
+  <div style="flex:1;display:flex;gap:6px"><label class="pick" style="margin:0">Gallery<input type="file" id="file" accept="image/*"></label><label class="pick" style="margin:0">Camera<input type="file" id="cam" accept="image/*" capture="environment"></label></div></div>
+ <label>Name</label><input id="fn">
+ <div class="g2"><div><label>Weight / Pack</label><input id="fp" placeholder="350g"></div>
+ <div><label>Category</label><input id="fc" list="cats" placeholder="Rusk"><datalist id="cats"></datalist></div></div>
+ <div class="g2"><div><label>MRP ₹</label><input id="fm" type="number" inputmode="decimal"></div>
+ <div><label>Our rate ₹</label><input id="fr" type="number" inputmode="decimal"></div></div>
+ <label>Note (carton rate etc.)</label><input id="fo">
+ <div class="row" style="margin-top:14px"><button id="save" style="flex:1">Save</button><button class="alt" id="edX">Close</button></div>
+ <div class="row" style="margin-top:8px"><button class="del" id="rm" style="flex:1">Delete</button></div></dialog>
+
+<dialog id="od"><h3 style="margin:0 0 4px">Your order</h3>
+ <label>Your name *</label><input id="on" autocomplete="name">
+ <label>Shop name / phone (optional)</label><input id="os">
+ <div class="sum" id="osum"></div>
+ <div class="row" style="margin-top:12px"><button class="wa" id="osend" style="flex:1">Send order on WhatsApp</button><button class="alt" id="oX">Close</button></div></dialog>
+
+<dialog id="lg"><h3 style="margin:0 0 4px">Owner login</h3>
+ <label>Email</label><input id="le" type="email" autocomplete="username">
+ <label>Password</label><input id="lp" type="password" autocomplete="current-password">
+ <div class="row" style="margin-top:12px"><button id="lgo" style="flex:1">Login</button><button class="alt" id="lX">Close</button></div></dialog>
+
+<dialog id="st"><h3 style="margin:0 0 4px">Settings</h3>
+ <label>WhatsApp number for orders (with 91, digits only)</label><input id="sw" inputmode="numeric" placeholder="919XXXXXXXXX">
+ <div class="row" style="margin-top:12px"><button id="sSave" style="flex:1">Save</button><button class="alt" id="sX">Close</button></div>
+ <div class="row" style="margin-top:8px"><button class="alt" id="seed" style="flex:1">Load starter items</button><button class="alt" id="out" style="flex:1">Logout</button></div></dialog>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,collection,doc,onSnapshot,setDoc,addDoc,updateDoc,deleteDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const app=initializeApp({apiKey:"AIzaSyA5YCk1QRPHlZq1DvZywH6VN7u7ADfmzCo",authDomain:"kanha-catalog.firebaseapp.com",projectId:"kanha-catalog",storageBucket:"kanha-catalog.firebasestorage.app",messagingSenderId:"208819993539",appId:"1:208819993539:web:3c059ff57594436e85db76"});
+const db=getFirestore(app),auth=getAuth(app);
+const $=id=>document.getElementById(id);
+let P=[],wa="919300066779",owner=false,cat="All",cur=null,curImg="",qty={};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=v=>v===null||v===undefined||v===""||isNaN(v)?"":"₹"+(+(+v).toFixed(2));
+const unit=x=>(x.r!==null&&x.r!==undefined&&x.r!=="")?+x.r:(+x.m||0);
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+const fail=e=>toast(e&&e.code==="permission-denied"?"Not allowed — login as owner":"Error: "+(e.code||e.message));
+
+onSnapshot(collection(db,"products"),s=>{P=s.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.t||0)-(b.t||0));render()},e=>toast("Cannot load: "+e.code));
+onSnapshot(doc(db,"settings","main"),s=>{wa=(s.data()||{}).wa||"919300066779"});
+onAuthStateChanged(auth,u=>{owner=!!u;render()});
+
+function render(){
+ const cats=["All",...new Set(P.map(x=>x.c||"Other"))];
+ $("chips").innerHTML=cats.map(c=>`<button class="chip ${c===cat?"on":""}" data-c="${esc(c)}">${esc(c)}</button>`).join("");
+ $("cats").innerHTML=cats.slice(1).map(c=>`<option value="${esc(c)}">`).join("");
+ const q=$("q").value.trim().toLowerCase();
+ const items=P.filter(x=>(cat==="All"||(x.c||"Other")===cat)&&(!q||((x.n||"")+(x.c||"")+(x.p||"")).toLowerCase().includes(q)));
+ let h="";
+ if(!items.length)h=`<div class="empty">${P.length?"No items found.":owner?"No items yet. Open Settings → Load starter items.":"Catalog is empty."}</div>`;
+ else{const g={};items.forEach(x=>(g[x.c||"Other"]??=[]).push(x));
+  h=Object.entries(g).map(([k,a])=>`<h2>${esc(k)}</h2>`+a.map(x=>{const has=x.r!==null&&x.r!==undefined&&x.r!=="";
+   return `<div class="item ${owner?"ed":""}" data-id="${x.id}"><div class="ph" style="${x.img?`background-image:url(${x.img})`:""}">${x.img?"":esc((x.n||"?")[0])}</div>
+   <div class="info"><div class="nm">${esc(x.n)}</div><div class="pk">${esc(x.p)}${x.o?" • "+esc(x.o):""}</div></div>
+   <div class="pr"><div class="rate">${fmt(has?x.r:x.m)}</div><div class="mrp">${has?"MRP <s>"+fmt(x.m)+"</s>":"MRP"}</div>
+   ${owner?"":`<div class="qty"><button class="alt" data-a="-" data-id="${x.id}">−</button><b>${qty[x.id]||0}</b><button data-a="+" data-id="${x.id}">+</button></div>`}</div></div>`}).join("")).join("")}
+ h+=owner?"":`<button class="link" id="ol">Owner login</button>`;
+ $("list").innerHTML=h;
+ const ol=$("ol");if(ol)ol.onclick=()=>$("lg").showModal();
+ bar();
+}
+function cart(){return P.filter(x=>qty[x.id]>0)}
+function bar(){
+ if(owner){$("bar").innerHTML=`<button id="add">+ New item</button><button class="alt" id="set">Settings</button>`;
+  $("add").onclick=()=>openEd(null);$("set").onclick=()=>{$("sw").value=wa;$("st").showModal()}}
+ else{const c=cart(),n=c.reduce((s,x)=>s+qty[x.id],0),t=c.reduce((s,x)=>s+qty[x.id]*unit(x),0);
+  $("bar").innerHTML=`<button class="wa" id="ck" ${n?"":"disabled style='opacity:.5'"}>${n?`Review order • ${n} pcs • ₹${+t.toFixed(2)}`:"Add items to order"}</button>`;
+  $("ck").onclick=()=>{if(n)openOrder()}}
+}
+$("chips").onclick=e=>{const c=e.target.dataset.c;if(c){cat=c;render()}};
+$("q").oninput=render;
+$("list").onclick=e=>{
+ const b=e.target.closest("button[data-a]");
+ if(b){const id=b.dataset.id;qty[id]=Math.max(0,(qty[id]||0)+(b.dataset.a==="+"?1:-1));render();return}
+ const it=e.target.closest(".item.ed");if(it)openEd(P.find(x=>x.id===it.dataset.id))};
+
+function lines(){return cart().map(x=>`• ${x.n}${x.p?" ("+x.p+")":""} x ${qty[x.id]} = ₹${+(qty[x.id]*unit(x)).toFixed(2)}`)}
+function openOrder(){const c=cart(),t=c.reduce((s,x)=>s+qty[x.id]*unit(x),0);
+ $("osum").innerHTML=c.map(x=>`<div><span>${esc(x.n)} ${esc(x.p||"")} × ${qty[x.id]}</span><b>₹${+(qty[x.id]*unit(x)).toFixed(2)}</b></div>`).join("")+`<div style="margin-top:6px;font-size:17px"><span>Total</span><b>₹${+t.toFixed(2)}</b></div>`;
+ $("od").showModal()}
+$("oX").onclick=()=>$("od").close();
+$("osend").onclick=()=>{const n=$("on").value.trim();if(!n){toast("Enter your name");return}
+ if(!wa){toast("Ordering is not set up yet");return}
+ const t=cart().reduce((s,x)=>s+qty[x.id]*unit(x),0),sh=$("os").value.trim();
+ const msg=`*New Order*\nName: ${n}${sh?"\nShop/Phone: "+sh:""}\n\n${lines().join("\n")}\n\n*Total: ₹${+t.toFixed(2)}*`;
+ location.href="https://wa.me/"+wa.replace(/\D/g,"")+"?text="+encodeURIComponent(msg)};
+
+function setPh(){const p=$("edPh");p.style.backgroundImage=curImg?`url(${curImg})`:"";p.textContent=curImg?"":"📷"}
+function openEd(x){cur=x;curImg=x?x.img||"":"";$("edT").textContent=x?"Edit item":"New item";
+ $("fn").value=x?x.n:"";$("fp").value=x?x.p||"":"";$("fc").value=x?x.c||"":(cat!=="All"?cat:"");
+ $("fm").value=x&&x.m!=null?x.m:"";$("fr").value=x&&x.r!=null?x.r:"";$("fo").value=x?x.o||"":"";
+ $("rm").dataset.sure="0";$("rm").textContent="Delete";$("rm").style.display=x?"":"none";setPh();$("ed").showModal()}
+$("edX").onclick=()=>$("ed").close();
+const onPick=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+ r.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,320/Math.max(im.width,im.height)),w=im.width*k,h=im.height*k;
+  const c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);curImg=c.toDataURL("image/jpeg",.7);setPh()};im.src=r.result};
+ r.readAsDataURL(f);e.target.value=""};
+$("file").onchange=onPick;$("cam").onchange=onPick;
+$("save").onclick=async()=>{const n=$("fn").value.trim();if(!n){toast("Enter a name");return}
+ const num=v=>v===""?null:+v;
+ const d={n,p:$("fp").value.trim(),c:$("fc").value.trim()||"Other",m:num($("fm").value),r:num($("fr").value),o:$("fo").value.trim(),img:curImg};
+ try{if(cur)await updateDoc(doc(db,"products",cur.id),d);else await addDoc(collection(db,"products"),{...d,t:Date.now()});$("ed").close();toast("Saved")}catch(e){fail(e)}};
+$("rm").onclick=async()=>{if($("rm").dataset.sure!=="1"){$("rm").dataset.sure="1";$("rm").textContent="Sure? Delete";return}
+ try{await deleteDoc(doc(db,"products",cur.id));$("ed").close();toast("Deleted")}catch(e){fail(e)}};
+
+$("lX").onclick=()=>$("lg").close();
+$("lgo").onclick=async()=>{try{await signInWithEmailAndPassword(auth,$("le").value.trim(),$("lp").value);$("lp").value="";$("lg").close();toast("Logged in")}catch(e){toast("Wrong email or password")}};
+$("sX").onclick=()=>$("st").close();
+$("out").onclick=async()=>{await signOut(auth);$("st").close()};
+$("sSave").onclick=async()=>{try{await setDoc(doc(db,"settings","main"),{wa:$("sw").value.replace(/\D/g,"")});$("st").close();toast("Saved")}catch(e){fail(e)}};
+$("seed").onclick=async()=>{if(P.length){toast("Items already exist");return}
+ const S=[["Pape Toast","Toast","400g",85,null,""],["Pape Toast","Toast","350g",85,64,"15pc carton 960/-"],["Tea Time Rusk","Rusk","350g",70,52.5,"12pc carton 630/-"],["Ujjaini Rusk","Rusk","350g",85,63.3,"15pc carton 950/-"],["Kaju Pape Toast","Toast","350g",110,72,"15pc carton"],["Sugar Free Pape","Toast","350g",120,90,"15pc carton"],["Suji Rusk","Rusk","350g",70,null,""],["Atta Rusk","Rusk","350g",70,null,""],["Mawa Rusk","Rusk","350g",70,null,""],["Milk Rusk","Rusk","350g",70,null,""],["Elaichi Rusk","Rusk","350g",70,null,""],["Chocoferro Wafer Roll (Coconut, Cookie&Cream)","Wafer","40pc",240,200,""],["Chocozay Wafer Roll (Assorted)","Wafer","30pc",150,120,""]];
+ try{for(let i=0;i<S.length;i++){const a=S[i];await addDoc(collection(db,"products"),{n:a[0],c:a[1],p:a[2],m:a[3],r:a[4],o:a[5],img:"",t:Date.now()+i})}$("st").close();toast("Loaded")}catch(e){fail(e)}};
+render();
+</script></body></html>
